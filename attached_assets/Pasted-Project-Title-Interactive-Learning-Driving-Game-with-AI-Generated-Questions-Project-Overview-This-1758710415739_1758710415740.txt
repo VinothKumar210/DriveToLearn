@@ -1,0 +1,75 @@
+Project Title
+
+Interactive Learning Driving Game with AI-Generated Questions
+
+Project Overview
+
+This project is an educational and interactive web game where users can learn and test their knowledge in a fun and engaging way. The user inputs a paragraph or notes, and the system automatically generates multiple-choice questions based on that text using the Gemini AI API. The player then answers these questions by driving a car in a 4-lane road simulation, where each lane corresponds to an answer option.
+
+The game combines learning, decision-making, and real-time gameplay. As the player answers questions correctly, the difficulty gradually increases by adding more traffic, obstacles, or time pressure.
+
+How It Works
+
+User Input:
+
+The user types or pastes a paragraph or notes into an input box on the website.
+
+Question Generation:
+
+The backend sends the paragraph to the Gemini AI API.
+
+The API generates multiple-choice questions with 4 options and identifies the correct answer.
+
+Interactive Gameplay:
+
+The game displays a 4-lane road on the screen.
+
+Each lane represents one of the 4 answer options (A, B, C, D).
+
+The player moves their car to the lane corresponding to what they think is the correct answer.
+
+Answer Checking & Feedback:
+
+Correct lane → the player scores points and moves to the next question.
+
+Wrong lane → the player loses a life or points; the correct answer is shown.
+
+Difficulty Progression:
+
+As the player progresses, the game becomes harder:
+
+Faster car movement
+
+More traffic and obstacles
+
+Reduced time per question
+
+Game End & Results:
+
+The game ends when all questions are answered or the player runs out of lives.
+
+Final score and performance metrics are displayed.
+
+Key Features
+
+AI-Powered Question Generation: Automatically creates questions from user text using Gemini API.
+
+Interactive 2D Driving Simulation: Combines quiz answering with real-time car movement.
+
+Dynamic Difficulty: Traffic density, speed, and question complexity increase over time.
+
+Immediate Feedback: Players know instantly if their answer was correct.
+
+Gamification: Points, streaks, and optional leaderboards to motivate users.
+
+Responsive Design: Can be played on desktop or mobile devices.
+
+Potential Extensions
+
+Multiplayer mode to race while answering questions.
+
+Hints or explanations after incorrect answers to enhance learning.
+
+Voice input for lane selection or answers.
+
+Personalized difficulty based on past performance.
