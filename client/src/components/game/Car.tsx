@@ -1,6 +1,7 @@
 import { useRef, useEffect } from "react";
 import { useFrame } from "@react-three/fiber";
 import { useDriving } from "@/lib/stores/useDriving";
+import { LANE_POSITIONS } from "@/lib/constants/lanes";
 import * as THREE from "three";
 
 interface CarProps {
@@ -14,8 +15,8 @@ export function Car({ isPlayer = false, lane = 0, position = 0, color = "#ff0000
   const meshRef = useRef<THREE.Group>(null);
   const { playerLane, playerPosition } = useDriving();
   
-  // Lane positions: A(-7.5), B(-2.5), C(2.5), D(7.5)
-  const lanePositions = [-7.5, -2.5, 2.5, 7.5];
+  // Use centralized lane positions
+  const lanePositions = LANE_POSITIONS;
   
   useFrame(() => {
     if (!meshRef.current) return;

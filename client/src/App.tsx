@@ -5,7 +5,7 @@ import { useQuiz } from "@/lib/stores/useQuiz";
 import { GameMenu } from "@/components/ui/GameMenu";
 import { TextInput } from "@/components/ui/TextInput";
 import { GameScene } from "@/components/game/GameScene";
-import { QuestionOverlay } from "@/components/ui/QuestionOverlay";
+import { GameHUD } from "@/components/ui/GameHUD";
 import { GameUI } from "@/components/ui/GameUI";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -107,7 +107,7 @@ function App() {
             >
               <GameScene />
             </Suspense>
-            <QuestionOverlay />
+            <GameHUD />
             <GameUI />
           </>
         )}

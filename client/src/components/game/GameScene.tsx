@@ -4,6 +4,7 @@ import { KeyboardControls, OrbitControls, useKeyboardControls } from "@react-thr
 import { Road } from "./Road";
 import { Car } from "./Car";
 import { Traffic } from "./Traffic";
+import { FloatingAnswers } from "./FloatingAnswers";
 import { useDriving } from "@/lib/stores/useDriving";
 import { useQuiz } from "@/lib/stores/useQuiz";
 import { useGame } from "@/lib/stores/useGame";
@@ -263,6 +264,7 @@ export function GameScene() {
           <Road />
           <Car isPlayer={true} color="#ff6b6b" />
           <Traffic />
+          <FloatingAnswers />
         </Suspense>
         
         <GameLogic />

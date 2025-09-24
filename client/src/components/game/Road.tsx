@@ -1,4 +1,5 @@
 import { useTexture } from "@react-three/drei";
+import { LANE_CONFIG } from "@/lib/constants/lanes";
 import * as THREE from "three";
 
 export function Road() {
@@ -41,19 +42,13 @@ export function Road() {
         <meshLambertMaterial color="#ffffff" />
       </mesh>
       
-      {/* Lane labels (floating above road) */}
-      {[
-        { position: [-7.5, 2, -10], label: "A", color: "#ef4444" },
-        { position: [-2.5, 2, -10], label: "B", color: "#3b82f6" },
-        { position: [2.5, 2, -10], label: "C", color: "#22c55e" },
-        { position: [7.5, 2, -10], label: "D", color: "#eab308" },
-      ].map((lane, index) => (
-        <group key={index} position={lane.position as [number, number, number]}>
+      {/* Lane markers on road surface */}
+      {LANE_CONFIG.map((lane, index) => (
+        <group key={index} position={[lane.position, 0.01, -10]}>
           <mesh>
-            <boxGeometry args={[3, 1, 0.1]} />
-            <meshLambertMaterial color={lane.color} transparent opacity={0.8} />
+            <boxGeometry args={[2.5, 0.1, 1]} />
+            <meshLambertMaterial color={lane.color} transparent opacity={0.6} />
           </mesh>
-          {/* Text would need a text geometry or sprite - for now using colored box */}
         </group>
       ))}
     </group>
