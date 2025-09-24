@@ -1,4 +1,4 @@
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import { useFrame } from "@react-three/fiber";
 import { useDriving } from "@/lib/stores/useDriving";
 import { useQuiz } from "@/lib/stores/useQuiz";
@@ -104,8 +104,8 @@ function PowerUpItem({ powerup, onCollect }: PowerUpProps) {
 }
 
 export function PowerUps() {
-  const powerUpsRef = useRef<PowerUp[]>([]);
-  const { difficulty, playerPosition } = useDriving();
+  const [powerUps, setPowerUps] = useState<PowerUp[]>([]);
+  const { difficulty, playerPosition, gameSpeed, setPlayerLane } = useDriving();
   const { gameStats, setTimeRemaining, timeRemaining } = useQuiz();
   
   // Generate power-ups periodically
@@ -123,12 +123,13 @@ export function PowerUps() {
           collected: false
         };
         
-        powerUpsRef.current.push(newPowerUp);
-        
-        // Clean up old power-ups
-        powerUpsRef.current = powerUpsRef.current.filter(
-          (pu) => !pu.collected && pu.position[2] > playerPosition - 20
-        );
+        setPowerUps(prev => {
+          // Add new power-up and clean up old ones
+          const updated = [...prev, newPowerUp].filter(
+            (pu) => !pu.collected && pu.position[2] > playerPosition - 20
+          );
+          return updated;
+        });
       }
     }, 3000 - difficulty * 200);
     
@@ -136,37 +137,39 @@ export function PowerUps() {
   }, [difficulty, playerPosition]);
   
   const handleCollect = (id: string, type: string) => {
-    // Mark as collected
-    const powerUp = powerUpsRef.current.find(pu => pu.id === id);
-    if (powerUp) {
-      powerUp.collected = true;
-      
-      // Apply power-up effects
-      switch (type) {
-        case "speed":
-          // Temporary speed boost (handled in useDriving)
-          console.log("Speed boost collected!");
-          break;
-        case "shield":
-          // Temporary invincibility
-          console.log("Shield collected!");
-          break;
-        case "time":
-          // Add time
-          setTimeRemaining(Math.min(15, timeRemaining + 5));
-          console.log("Time bonus collected!");
-          break;
-        case "points":
-          // Add points (would need to modify useQuiz)
-          console.log("Points bonus collected!");
-          break;
-      }
+    // Mark as collected and apply effects
+    setPowerUps(prev => prev.map(pu => 
+      pu.id === id ? { ...pu, collected: true } : pu
+    ));
+    
+    // Apply power-up effects immediately
+    switch (type) {
+      case "speed":
+        // Temporary speed boost - this would need modification to useDriving store
+        console.log("Speed boost collected!");
+        // TODO: Implement temporary speed increase
+        break;
+      case "shield":
+        // Temporary invincibility - this would need modification to collision detection
+        console.log("Shield collected!");
+        // TODO: Implement temporary shield effect
+        break;
+      case "time":
+        // Add time to current question
+        setTimeRemaining(Math.min(15, timeRemaining + 5));
+        console.log("Time bonus collected!");
+        break;
+      case "points":
+        // Add bonus points - this would need modification to useQuiz store
+        console.log("Points bonus collected!");
+        // TODO: Implement point bonus
+        break;
     }
   };
   
   return (
     <>
-      {powerUpsRef.current.map((powerup) => (
+      {powerUps.map((powerup) => (
         <PowerUpItem
           key={powerup.id}
           powerup={powerup}

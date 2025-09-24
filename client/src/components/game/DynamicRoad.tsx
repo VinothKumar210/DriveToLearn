@@ -1,6 +1,6 @@
 import { useTexture } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
-import { useRef } from "react";
+import { useRef, useMemo } from "react";
 import { LANE_CONFIG } from "@/lib/constants/lanes";
 import { useDriving } from "@/lib/stores/useDriving";
 import * as THREE from "three";
@@ -13,6 +13,17 @@ export function DynamicRoad() {
   // Configure texture for tiling and animation
   asphaltTexture.wrapS = asphaltTexture.wrapT = THREE.RepeatWrapping;
   asphaltTexture.repeat.set(4, 20);
+  
+  // Pre-compute speed lines to avoid Math.random in render
+  const speedLines = useMemo(() => {
+    return Array.from({ length: 20 }).map((_, i) => ({
+      id: i,
+      x: (Math.random() - 0.5) * 25,
+      z: i * 10 - 100,
+      rotation: Math.random() * Math.PI,
+      size: 2 + Math.random() * 2
+    }));
+  }, []);
   
   // Animate road texture for movement effect
   useFrame((_, delta) => {
@@ -88,17 +99,17 @@ export function DynamicRoad() {
       ))}
       
       {/* Speed lines for enhanced feeling of movement */}
-      {Array.from({ length: 20 }).map((_, i) => (
+      {speedLines.map((line) => (
         <mesh
-          key={i}
+          key={line.id}
           position={[
-            (Math.random() - 0.5) * 25,
+            line.x,
             0.05,
-            playerPosition + (i * 10) - 100
+            playerPosition + line.z
           ]}
-          rotation={[-Math.PI / 2, 0, Math.random() * Math.PI]}
+          rotation={[-Math.PI / 2, 0, line.rotation]}
         >
-          <planeGeometry args={[0.1, 2 + difficulty]} />
+          <planeGeometry args={[0.1, line.size + difficulty]} />
           <meshLambertMaterial
             color="#ffffff"
             transparent

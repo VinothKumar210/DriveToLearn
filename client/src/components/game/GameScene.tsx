@@ -215,6 +215,12 @@ function GameLogic() {
     }
   }, [timeRemaining, playerLane, answerQuestion, playSuccess, playHit, loseLife, currentQuestionIndex, questions.length, nextQuestion, increaseDifficulty, end]);
 
+  // Start engine sound when game begins
+  useEffect(() => {
+    playEngine();
+    return () => stopEngine();
+  }, [playEngine, stopEngine]);
+
   // Game loop
   useFrame((_, delta) => {
     // Update player position
