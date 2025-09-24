@@ -1,10 +1,14 @@
-import { Suspense, useEffect, useRef } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { KeyboardControls, OrbitControls, useKeyboardControls } from "@react-three/drei";
 import { Road } from "./Road";
+import { DynamicRoad } from "./DynamicRoad";
 import { Car } from "./Car";
 import { Traffic } from "./Traffic";
 import { FloatingAnswers } from "./FloatingAnswers";
+import { Environment } from "./Environment";
+import { ParticleSystem } from "./ParticleSystem";
+import { PowerUps } from "./PowerUps";
 import { useDriving } from "@/lib/stores/useDriving";
 import { useQuiz } from "@/lib/stores/useQuiz";
 import { useGame } from "@/lib/stores/useGame";
@@ -31,7 +35,8 @@ function GameLogic() {
     updatePlayerPosition, 
     checkCollisions, 
     increaseDifficulty,
-    difficulty 
+    difficulty,
+    playerPosition
   } = useDriving();
   const { 
     questions, 
@@ -44,12 +49,14 @@ function GameLogic() {
     tickTimer 
   } = useQuiz();
   const { end } = useGame();
-  const { playHit, playSuccess } = useAudio();
+  const { playHit, playSuccess, playLaneChange, playEngine, stopEngine } = useAudio();
   
   const [subscribe, getState] = useKeyboardControls<Controls>();
   const lastLaneChangeRef = useRef(0);
   const hasAnsweredRef = useRef(false);
   const timerRef = useRef<number | null>(null);
+  const [showSuccessParticles, setShowSuccessParticles] = useState(false);
+  const [showCollisionParticles, setShowCollisionParticles] = useState(false);
   
   // Handle lane changes
   useEffect(() => {
@@ -59,6 +66,7 @@ function GameLogic() {
         if (pressed && Date.now() - lastLaneChangeRef.current > 200) {
           setPlayerLane(playerLane - 1);
           lastLaneChangeRef.current = Date.now();
+          playLaneChange();
           console.log("Moving left to lane:", Math.max(0, playerLane - 1));
         }
       }
@@ -70,6 +78,7 @@ function GameLogic() {
         if (pressed && Date.now() - lastLaneChangeRef.current > 200) {
           setPlayerLane(playerLane + 1);
           lastLaneChangeRef.current = Date.now();
+          playLaneChange();
           console.log("Moving right to lane:", Math.min(3, playerLane + 1));
         }
       }
@@ -86,9 +95,13 @@ function GameLogic() {
           
           if (isCorrect) {
             playSuccess();
+            setShowSuccessParticles(true);
+            setTimeout(() => setShowSuccessParticles(false), 2000);
           } else {
             playHit();
             loseLife();
+            setShowCollisionParticles(true);
+            setTimeout(() => setShowCollisionParticles(false), 2000);
           }
           
           hasAnsweredRef.current = true;
@@ -160,9 +173,13 @@ function GameLogic() {
       
       if (isCorrect) {
         playSuccess();
+        setShowSuccessParticles(true);
+        setTimeout(() => setShowSuccessParticles(false), 2000);
       } else {
         playHit();
         loseLife();
+        setShowCollisionParticles(true);
+        setTimeout(() => setShowCollisionParticles(false), 2000);
       }
       
       hasAnsweredRef.current = true;
@@ -207,6 +224,8 @@ function GameLogic() {
     if (checkCollisions()) {
       playHit();
       loseLife();
+      setShowCollisionParticles(true);
+      setTimeout(() => setShowCollisionParticles(false), 2000);
       // Check lives after losing one
       const updatedStats = useQuiz.getState().gameStats;
       if (updatedStats.lives <= 0) {
@@ -222,7 +241,35 @@ function GameLogic() {
     }
   });
   
-  return null;
+  return (
+    <>
+      {/* Success particle effects */}
+      {showSuccessParticles && (
+        <ParticleSystem
+          count={30}
+          color="#22c55e"
+          size={0.15}
+          speed={3}
+          spread={2}
+          position={[playerPosition * 0.1, 2, playerPosition]}
+          type="success"
+        />
+      )}
+      
+      {/* Collision particle effects */}
+      {showCollisionParticles && (
+        <ParticleSystem
+          count={25}
+          color="#ef4444"
+          size={0.12}
+          speed={2.5}
+          spread={1.5}
+          position={[playerPosition * 0.1, 1.5, playerPosition]}
+          type="collision"
+        />
+      )}
+    </>
+  );
 }
 
 export function GameScene() {
@@ -245,26 +292,40 @@ export function GameScene() {
       >
         <color attach="background" args={["#0f172a"]} />
         
-        {/* Lighting */}
-        <ambientLight intensity={0.4} />
+        {/* Enhanced Lighting */}
+        <ambientLight intensity={0.3} color="#404080" />
         <directionalLight
           position={[10, 20, 5]}
-          intensity={1}
+          intensity={1.2}
           castShadow
-          shadow-mapSize={[1024, 1024]}
-          shadow-camera-far={50}
-          shadow-camera-left={-20}
-          shadow-camera-right={20}
-          shadow-camera-top={20}
-          shadow-camera-bottom={-20}
+          shadow-mapSize={[2048, 2048]}
+          shadow-camera-far={100}
+          shadow-camera-left={-30}
+          shadow-camera-right={30}
+          shadow-camera-top={30}
+          shadow-camera-bottom={-30}
+          color="#ffffff"
         />
-        <pointLight position={[0, 10, 0]} intensity={0.3} />
+        {/* Road lighting */}
+        <spotLight
+          position={[0, 15, 0]}
+          angle={Math.PI / 6}
+          penumbra={0.5}
+          intensity={0.5}
+          castShadow
+          target-position={[0, 0, 0]}
+        />
+        {/* Dynamic side lighting */}
+        <pointLight position={[-20, 5, 10]} intensity={0.3} color="#ff6600" />
+        <pointLight position={[20, 5, 10]} intensity={0.3} color="#0066ff" />
         
         <Suspense fallback={null}>
-          <Road />
+          <Environment />
+          <DynamicRoad />
           <Car isPlayer={true} color="#ff6b6b" />
           <Traffic />
           <FloatingAnswers />
+          <PowerUps />
         </Suspense>
         
         <GameLogic />

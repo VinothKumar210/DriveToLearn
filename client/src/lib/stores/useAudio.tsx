@@ -4,28 +4,37 @@ interface AudioState {
   backgroundMusic: HTMLAudioElement | null;
   hitSound: HTMLAudioElement | null;
   successSound: HTMLAudioElement | null;
+  engineSound: HTMLAudioElement | null;
   isMuted: boolean;
+  isEngineRunning: boolean;
   
   // Setter functions
   setBackgroundMusic: (music: HTMLAudioElement) => void;
   setHitSound: (sound: HTMLAudioElement) => void;
   setSuccessSound: (sound: HTMLAudioElement) => void;
+  setEngineSound: (sound: HTMLAudioElement) => void;
   
   // Control functions
   toggleMute: () => void;
   playHit: () => void;
   playSuccess: () => void;
+  playEngine: () => void;
+  stopEngine: () => void;
+  playLaneChange: () => void;
 }
 
 export const useAudio = create<AudioState>((set, get) => ({
   backgroundMusic: null,
   hitSound: null,
   successSound: null,
+  engineSound: null,
   isMuted: true, // Start muted by default
+  isEngineRunning: false,
   
   setBackgroundMusic: (music) => set({ backgroundMusic: music }),
   setHitSound: (sound) => set({ hitSound: sound }),
   setSuccessSound: (sound) => set({ successSound: sound }),
+  setEngineSound: (sound) => set({ engineSound: sound }),
   
   toggleMute: () => {
     const { isMuted } = get();
@@ -66,8 +75,43 @@ export const useAudio = create<AudioState>((set, get) => ({
       }
       
       successSound.currentTime = 0;
+      successSound.volume = 0.6;
       successSound.play().catch(error => {
         console.log("Success sound play prevented:", error);
+      });
+    }
+  },
+
+  playEngine: () => {
+    const { engineSound, isMuted, isEngineRunning } = get();
+    if (engineSound && !isMuted && !isEngineRunning) {
+      set({ isEngineRunning: true });
+      engineSound.volume = 0.2;
+      engineSound.loop = true;
+      engineSound.play().catch(error => {
+        console.log("Engine sound play prevented:", error);
+      });
+    }
+  },
+
+  stopEngine: () => {
+    const { engineSound } = get();
+    if (engineSound) {
+      engineSound.pause();
+      engineSound.currentTime = 0;
+      set({ isEngineRunning: false });
+    }
+  },
+
+  playLaneChange: () => {
+    const { hitSound, isMuted } = get();
+    if (hitSound && !isMuted) {
+      // Use hit sound with lower volume for lane changes
+      const soundClone = hitSound.cloneNode() as HTMLAudioElement;
+      soundClone.volume = 0.1;
+      soundClone.playbackRate = 2; // Higher pitch for lane change
+      soundClone.play().catch(error => {
+        console.log("Lane change sound play prevented:", error);
       });
     }
   }
