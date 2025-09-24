@@ -80,17 +80,12 @@ export function Car({ isPlayer = false, lane = 0, position = 0, color = "#ff0000
         </>
       )}
       
-      {/* Exhaust particles for player car */}
+      {/* Simple exhaust effect for player car */}
       {isPlayer && (
-        <ParticleSystem
-          count={10}
-          color="#666666"
-          size={0.05}
-          speed={1}
-          spread={0.5}
-          position={[0, -0.2, -2.5]}
-          type="trail"
-        />
+        <mesh position={[0, -0.2, -2.5]}>
+          <sphereGeometry args={[0.1, 8, 8]} />
+          <meshBasicMaterial color="#666666" transparent opacity={0.5} />
+        </mesh>
       )}
       
       {/* Wheels */}

@@ -286,14 +286,16 @@ export function GameScene() {
       <Canvas
         shadows
         camera={{
-          position: [0, 15, 20],
-          fov: 60,
+          position: [0, 8, 15],
+          fov: 75,
           near: 0.1,
           far: 1000,
         }}
         gl={{
-          antialias: true,
-          powerPreference: "default",
+          antialias: false,
+          powerPreference: "high-performance",
+          preserveDrawingBuffer: false,
+          alpha: false,
         }}
       >
         <color attach="background" args={["#0f172a"]} />
@@ -326,12 +328,10 @@ export function GameScene() {
         <pointLight position={[20, 5, 10]} intensity={0.3} color="#0066ff" />
         
         <Suspense fallback={null}>
-          <Environment />
           <DynamicRoad />
           <Car isPlayer={true} color="#ff6b6b" />
           <Traffic />
           <FloatingAnswers />
-          <PowerUps />
         </Suspense>
         
         <GameLogic />
