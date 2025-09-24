@@ -14,11 +14,13 @@ import * as THREE from "three";
 enum Controls {
   left = "left",
   right = "right",
+  submit = "submit",
 }
 
 const keyMap = [
   { name: Controls.left, keys: ["ArrowLeft", "KeyA"] },
   { name: Controls.right, keys: ["ArrowRight", "KeyD"] },
+  { name: Controls.submit, keys: ["Space", "Enter"] },
 ];
 
 function GameLogic() {
@@ -36,7 +38,9 @@ function GameLogic() {
     answerQuestion, 
     nextQuestion, 
     gameStats, 
-    loseLife 
+    loseLife,
+    timeRemaining,
+    tickTimer 
   } = useQuiz();
   const { end } = useGame();
   const { playHit, playSuccess } = useAudio();
@@ -44,6 +48,7 @@ function GameLogic() {
   const [subscribe, getState] = useKeyboardControls<Controls>();
   const lastLaneChangeRef = useRef(0);
   const hasAnsweredRef = useRef(false);
+  const timerRef = useRef<number | null>(null);
   
   // Handle lane changes
   useEffect(() => {
@@ -69,34 +74,13 @@ function GameLogic() {
       }
     );
     
-    return () => {
-      unsubscribeLeft();
-      unsubscribeRight();
-    };
-  }, [subscribe, playerLane, setPlayerLane]);
-  
-  // Game loop
-  useFrame((_, delta) => {
-    // Update player position
-    updatePlayerPosition(delta);
-    
-    // Check for collisions
-    if (checkCollisions()) {
-      playHit();
-      loseLife();
-      if (gameStats.lives <= 1) {
-        end();
-        return;
-      }
-    }
-    
-    // Auto-answer questions after some time (simulating reaching the answer zone)
-    const currentQuestion = questions[currentQuestionIndex];
-    if (currentQuestion && !hasAnsweredRef.current) {
-      // Check if player has "driven through" the answer zone
-      // This could be based on position or timer - using a simple timer for now
-      setTimeout(() => {
-        if (!hasAnsweredRef.current) {
+    const unsubscribeSubmit = subscribe(
+      (state: any) => state.submit,
+      (pressed: boolean) => {
+        if (pressed && !hasAnsweredRef.current && questions[currentQuestionIndex]) {
+          console.log("Manual answer submission for lane:", playerLane);
+          
+          // Submit answer manually
           const isCorrect = answerQuestion(playerLane);
           
           if (isCorrect) {
@@ -107,6 +91,12 @@ function GameLogic() {
           }
           
           hasAnsweredRef.current = true;
+          
+          // Clear timer
+          if (timerRef.current) {
+            window.clearInterval(timerRef.current);
+            timerRef.current = null;
+          }
           
           // Move to next question or end game
           setTimeout(() => {
@@ -123,7 +113,85 @@ function GameLogic() {
             }
           }, 2000);
         }
-      }, 3000); // 3 seconds to answer
+      }
+    );
+    
+    return () => {
+      unsubscribeLeft();
+      unsubscribeRight();
+      unsubscribeSubmit();
+    };
+  }, [subscribe, playerLane, setPlayerLane, currentQuestionIndex, questions.length, answerQuestion, playSuccess, playHit, loseLife, nextQuestion, increaseDifficulty, end]);
+  
+  // Timer management
+  useEffect(() => {
+    const currentQuestion = questions[currentQuestionIndex];
+    if (currentQuestion && !hasAnsweredRef.current) {
+      // Start timer
+      timerRef.current = window.setInterval(() => {
+        tickTimer();
+      }, 1000);
+    }
+    
+    return () => {
+      if (timerRef.current) {
+        window.clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, [currentQuestionIndex, questions, tickTimer]);
+  
+  // Handle timer reaching zero
+  useEffect(() => {
+    if (timeRemaining === 0 && !hasAnsweredRef.current) {
+      // Time's up - auto submit current lane as answer
+      const isCorrect = answerQuestion(playerLane);
+      
+      if (isCorrect) {
+        playSuccess();
+      } else {
+        playHit();
+        loseLife();
+      }
+      
+      hasAnsweredRef.current = true;
+      
+      // Clear timer
+      if (timerRef.current) {
+        window.clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+      
+      // Move to next question or end game
+      setTimeout(() => {
+        if (currentQuestionIndex < questions.length - 1) {
+          nextQuestion();
+          hasAnsweredRef.current = false;
+          
+          // Increase difficulty every few questions
+          if ((currentQuestionIndex + 1) % 3 === 0) {
+            increaseDifficulty();
+          }
+        } else {
+          end();
+        }
+      }, 2000);
+    }
+  }, [timeRemaining, playerLane, answerQuestion, playSuccess, playHit, loseLife, currentQuestionIndex, questions.length, nextQuestion, increaseDifficulty, end]);
+
+  // Game loop
+  useFrame((_, delta) => {
+    // Update player position
+    updatePlayerPosition(delta);
+    
+    // Check for collisions
+    if (checkCollisions()) {
+      playHit();
+      loseLife();
+      if (gameStats.lives <= 1) {
+        end();
+        return;
+      }
     }
     
     // End game if no lives left

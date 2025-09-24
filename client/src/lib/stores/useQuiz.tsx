@@ -7,6 +7,7 @@ interface QuizState {
   gameStats: GameStats;
   isLoading: boolean;
   error: string | null;
+  timeRemaining: number;
   
   // Actions
   setQuestions: (questions: Question[]) => void;
@@ -16,6 +17,8 @@ interface QuizState {
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   loseLife: () => void;
+  setTimeRemaining: (time: number) => void;
+  tickTimer: () => void;
 }
 
 const initialStats: GameStats = {
@@ -32,13 +35,14 @@ export const useQuiz = create<QuizState>((set, get) => ({
   gameStats: initialStats,
   isLoading: false,
   error: null,
+  timeRemaining: 15,
   
-  setQuestions: (questions) => set({ questions, currentQuestionIndex: 0 }),
+  setQuestions: (questions) => set({ questions, currentQuestionIndex: 0, timeRemaining: 15 }),
   
   nextQuestion: () => {
     const { currentQuestionIndex, questions } = get();
     if (currentQuestionIndex < questions.length - 1) {
-      set({ currentQuestionIndex: currentQuestionIndex + 1 });
+      set({ currentQuestionIndex: currentQuestionIndex + 1, timeRemaining: 15 });
     }
   },
   
@@ -80,7 +84,17 @@ export const useQuiz = create<QuizState>((set, get) => ({
     currentQuestionIndex: 0,
     gameStats: initialStats,
     error: null,
+    timeRemaining: 15,
   }),
+  
+  setTimeRemaining: (time) => set({ timeRemaining: time }),
+  
+  tickTimer: () => {
+    const { timeRemaining } = get();
+    if (timeRemaining > 0) {
+      set({ timeRemaining: timeRemaining - 1 });
+    }
+  },
   
   setLoading: (loading) => set({ isLoading: loading }),
   setError: (error) => set({ error }),
