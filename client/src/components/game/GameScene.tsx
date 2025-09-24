@@ -1,6 +1,6 @@
 import { Suspense, useEffect, useRef } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { KeyboardControls, OrbitControls } from "@react-three/drei";
+import { KeyboardControls, OrbitControls, useKeyboardControls } from "@react-three/drei";
 import { Road } from "./Road";
 import { Car } from "./Car";
 import { Traffic } from "./Traffic";
@@ -48,8 +48,8 @@ function GameLogic() {
   // Handle lane changes
   useEffect(() => {
     const unsubscribeLeft = subscribe(
-      (state) => state.left,
-      (pressed) => {
+      (state: any) => state.left,
+      (pressed: boolean) => {
         if (pressed && Date.now() - lastLaneChangeRef.current > 200) {
           setPlayerLane(playerLane - 1);
           lastLaneChangeRef.current = Date.now();
@@ -59,8 +59,8 @@ function GameLogic() {
     );
     
     const unsubscribeRight = subscribe(
-      (state) => state.right,
-      (pressed) => {
+      (state: any) => state.right,
+      (pressed: boolean) => {
         if (pressed && Date.now() - lastLaneChangeRef.current > 200) {
           setPlayerLane(playerLane + 1);
           lastLaneChangeRef.current = Date.now();

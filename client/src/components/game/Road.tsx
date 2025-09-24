@@ -48,7 +48,7 @@ export function Road() {
         { position: [2.5, 2, -10], label: "C", color: "#22c55e" },
         { position: [7.5, 2, -10], label: "D", color: "#eab308" },
       ].map((lane, index) => (
-        <group key={index} position={lane.position}>
+        <group key={index} position={lane.position as [number, number, number]}>
           <mesh>
             <boxGeometry args={[3, 1, 0.1]} />
             <meshLambertMaterial color={lane.color} transparent opacity={0.8} />

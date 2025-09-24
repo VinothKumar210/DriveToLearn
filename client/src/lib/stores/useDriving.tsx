@@ -67,7 +67,7 @@ export const useDriving = create<DrivingState>((set, get) => ({
       const sameLane = car.lane === playerLane;
       const closePosition = Math.abs(car.position - playerPosition) < 8;
       
-      if (samelane && closePosition) {
+      if (sameLane && closePosition) {
         return true;
       }
     }

@@ -57,7 +57,7 @@ export function Car({ isPlayer = false, lane = 0, position = 0, color = "#ff0000
         [-0.9, -0.3, -1.2],
         [0.9, -0.3, -1.2],
       ].map((wheelPos, index) => (
-        <mesh key={index} position={wheelPos}>
+        <mesh key={index} position={wheelPos as [number, number, number]}>
           <cylinderGeometry args={[0.3, 0.3, 0.2, 8]} />
           <meshLambertMaterial color="#222222" />
         </mesh>
