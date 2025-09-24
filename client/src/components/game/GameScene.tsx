@@ -100,7 +100,14 @@ function GameLogic() {
           
           // Move to next question or end game
           setTimeout(() => {
-            if (currentQuestionIndex < questions.length - 1) {
+            const currentStats = useQuiz.getState().gameStats;
+            console.log("Manual submit - lives remaining:", currentStats.lives);
+            
+            if (currentStats.lives <= 0) {
+              console.log("Game over - no lives left after manual submit");
+              end();
+            } else if (currentQuestionIndex < questions.length - 1) {
+              console.log("Moving to next question after manual submit");
               nextQuestion();
               hasAnsweredRef.current = false;
               
@@ -109,6 +116,7 @@ function GameLogic() {
                 increaseDifficulty();
               }
             } else {
+              console.log("All questions completed after manual submit");
               end();
             }
           }, 2000);
@@ -144,8 +152,10 @@ function GameLogic() {
   // Handle timer reaching zero
   useEffect(() => {
     if (timeRemaining === 0 && !hasAnsweredRef.current) {
+      console.log("Timer reached zero - auto-submitting answer for lane:", playerLane);
       // Time's up - auto submit current lane as answer
       const isCorrect = answerQuestion(playerLane);
+      console.log("Answer was:", isCorrect ? "correct" : "incorrect");
       
       if (isCorrect) {
         playSuccess();
@@ -164,7 +174,14 @@ function GameLogic() {
       
       // Move to next question or end game
       setTimeout(() => {
-        if (currentQuestionIndex < questions.length - 1) {
+        const currentStats = useQuiz.getState().gameStats;
+        console.log("Current lives after answer:", currentStats.lives);
+        
+        if (currentStats.lives <= 0) {
+          console.log("Game over - no lives left");
+          end();
+        } else if (currentQuestionIndex < questions.length - 1) {
+          console.log("Moving to next question");
           nextQuestion();
           hasAnsweredRef.current = false;
           
@@ -173,6 +190,7 @@ function GameLogic() {
             increaseDifficulty();
           }
         } else {
+          console.log("All questions completed - ending game");
           end();
         }
       }, 2000);
@@ -188,14 +206,17 @@ function GameLogic() {
     if (checkCollisions()) {
       playHit();
       loseLife();
-      if (gameStats.lives <= 1) {
+      // Check lives after losing one
+      const updatedStats = useQuiz.getState().gameStats;
+      if (updatedStats.lives <= 0) {
         end();
         return;
       }
     }
     
     // End game if no lives left
-    if (gameStats.lives <= 0) {
+    const currentStats = useQuiz.getState().gameStats;
+    if (currentStats.lives <= 0) {
       end();
     }
   });
