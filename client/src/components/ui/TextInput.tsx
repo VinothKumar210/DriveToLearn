@@ -2,13 +2,15 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DemoQuestions } from "./DemoQuestions";
 import { useQuiz } from "@/lib/stores/useQuiz";
 import { useGame } from "@/lib/stores/useGame";
-import { Loader2, BookOpen, ArrowRight } from "lucide-react";
+import { Loader2, BookOpen, ArrowRight, Lightbulb } from "lucide-react";
 import { Question } from "@/types/game";
 
 export function TextInput() {
   const [text, setText] = useState("");
+  const [showDemo, setShowDemo] = useState(false);
   const { setQuestions, setLoading, setError, isLoading, error } = useQuiz();
   const { start } = useGame();
 
@@ -31,7 +33,19 @@ export function TextInput() {
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to generate questions: ${response.statusText}`);
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.error || `Server error: ${response.status} ${response.statusText}`;
+        
+        // Provide more specific error messages for common issues
+        if (response.status === 503) {
+          throw new Error("AI service is currently busy. Please try again in a few moments.");
+        } else if (response.status === 429) {
+          throw new Error("Too many requests. Please wait a moment and try again.");
+        } else if (response.status >= 500) {
+          throw new Error("Server is experiencing issues. Please try again later.");
+        }
+        
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();
@@ -40,11 +54,22 @@ export function TextInput() {
         throw new Error("Invalid response format from server");
       }
 
+      if (data.questions.length === 0) {
+        throw new Error("No questions could be generated from the provided text. Try providing more detailed content.");
+      }
+
       setQuestions(data.questions as Question[]);
       start(); // Move to playing phase
     } catch (err) {
       console.error("Error generating questions:", err);
-      setError(err instanceof Error ? err.message : "Failed to generate questions");
+      
+      // Provide user-friendly error messages
+      let userMessage = "Failed to generate questions. Please try again.";
+      if (err instanceof Error) {
+        userMessage = err.message;
+      }
+      
+      setError(userMessage);
     } finally {
       setLoading(false);
     }
@@ -76,6 +101,11 @@ export function TextInput() {
           {error && (
             <div className="p-3 bg-red-900/50 border border-red-700 rounded-md">
               <p className="text-red-300 text-sm">{error}</p>
+              {(error.includes("busy") || error.includes("overloaded") || error.includes("503")) && (
+                <p className="text-red-200 text-xs mt-2">
+                  💡 Tip: Try again in a few moments when the AI service is less busy.
+                </p>
+              )}
             </div>
           )}
           
@@ -101,6 +131,25 @@ export function TextInput() {
           <div className="text-center text-gray-400 text-sm">
             <p>AI will generate 5-10 multiple choice questions based on your content</p>
           </div>
+
+          {/* Demo option */}
+          {!showDemo && error && (error.includes("busy") || error.includes("overloaded") || error.includes("503")) && (
+            <div className="text-center">
+              <Button
+                onClick={() => setShowDemo(true)}
+                variant="outline"
+                className="border-blue-600 text-blue-300 hover:bg-blue-600/20"
+                size="sm"
+              >
+                <Lightbulb className="w-4 h-4 mr-2" />
+                Try Demo Questions Instead
+              </Button>
+            </div>
+          )}
+
+          {showDemo && (
+            <DemoQuestions onClose={() => setShowDemo(false)} />
+          )}
         </CardContent>
       </Card>
     </div>
